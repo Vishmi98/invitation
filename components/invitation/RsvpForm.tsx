@@ -8,11 +8,23 @@ import { T } from "@/components/T";
 import { LotusIcon } from "@/components/ornaments/LotusIcon";
 import { useLang } from "@/lib/lang";
 import { cn } from "@/lib/reveal";
-import { initialRsvpState } from "@/lib/rsvp";
+import { initialRsvpState, type RsvpState } from "@/lib/rsvp";
+
+/**
+ * A dropped connection or a server timeout makes the action call throw, and an action that
+ * throws takes the whole page down to the error boundary. Show the "try again" message instead.
+ */
+async function saveRsvp(prev: RsvpState, formData: FormData): Promise<RsvpState> {
+  try {
+    return await submitRsvp(prev, formData);
+  } catch {
+    return { status: "error", errors: { form: true } };
+  }
+}
 
 export function RsvpForm() {
   const lang = useLang();
-  const [state, formAction, pending] = useActionState(submitRsvp, initialRsvpState);
+  const [state, formAction, pending] = useActionState(saveRsvp, initialRsvpState);
   // Controlled fields keep their values if the server returns a validation error.
   const [name, setName] = useState("");
   const [attending, setAttending] = useState<"" | "yes" | "no">("");

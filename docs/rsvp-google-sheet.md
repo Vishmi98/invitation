@@ -10,7 +10,7 @@ When a guest submits the RSVP form, the site posts their reply to a Google Apps 
 4. Change `SECRET` to a long random string of your own.
 
 ```js
-const SECRET = "change-me-to-a-long-random-string";
+const SECRET = "WeddingRSVP2026_SweetSecret_9284_XYZ";
 const SHEET_NAME = "RSVP";
 
 function doPost(e) {
@@ -23,7 +23,7 @@ function doPost(e) {
   if (data.secret !== SECRET) return json({ ok: false, error: "unauthorized" });
 
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(10000)) return json({ ok: false, error: "busy" });
   try {
     const book = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = book.getSheetByName(SHEET_NAME) || book.insertSheet(SHEET_NAME);
@@ -39,6 +39,8 @@ function doPost(e) {
       data.invitedAs || "",
       data.lang || "",
     ]);
+  } catch (err) {
+    return json({ ok: false, error: String(err) });
   } finally {
     lock.releaseLock();
   }
@@ -71,12 +73,21 @@ RSVP_WEBHOOK_SECRET=the same string you put in SECRET
 
 Then restart `npm run dev` or redeploy, submit a test RSVP, and check that a row appears in the **RSVP** tab of the Sheet.
 
+## Troubleshooting
+
+The guest only sees "Thank you" after the Sheet confirms the row. If it can't be saved, the guest sees "Sorry, we couldn't send your reply" and can try again. The terminal (or your host's function logs) shows `[rsvp] reply NOT saved:` with the reason and the guest's reply, so you can add it to the Sheet by hand.
+
+| Log says | Fix |
+|---|---|
+| `RSVP_WEBHOOK_URL is not set` or `RSVP_WEBHOOK_SECRET is not set` | Add both to `.env.local` (local) or to your host's environment variables, then restart or redeploy. |
+| `rejected the secret` | `RSVP_WEBHOOK_SECRET` must be exactly the same as `SECRET` in the script. |
+| `… not JSON. Check that RSVP_WEBHOOK_URL …` | Use the **Web app URL** ending in `/exec`, not the editor URL. In **Manage deployments**, set **Who has access** to **Anyone**. |
+| `did not answer within 20s` | Google was slow. Try again. If it keeps happening, open **Executions** in Apps Script to look for errors. |
+| `error "…"` | The script failed. The message names the cause. After fixing the script, deploy a **New version**. |
+
 ## Notes
 
 - **"Invited as"** is the `?to=` name from the guest's link. It tells you which invitation a reply came from, even when the guest typed their name differently.
-- **Without `RSVP_WEBHOOK_URL`:**
-  - In development, replies are only printed to the terminal, not saved.
-  - In production, the form shows an error message instead of pretending to succeed.
 - **Spam protection:**
   - Submissions that fill the hidden honeypot field are dropped.
   - Values starting with `=`, `+`, `-` or `@` are escaped, so they can't run as formulas in the Sheet.

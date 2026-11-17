@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mandala Lotus wedding invitation
 
-## Getting Started
+A single-page, mobile-first digital wedding invitation in ivory and gold. It is in Sinhala by default, with an English toggle, and is built with Next.js 16 and Tailwind CSS v4.
 
-First, run the development server:
+Sections, top to bottom:
+
+- **Cover:** opening card with a blooming mandala, intro drums and background music.
+- **Invitation letter:** parents' names, couple photo, date and venue.
+- **Countdown**
+- **Event details:** programme, plus "Save the date" (Google Calendar and `.ics`).
+- **Gallery:** photos with a lightbox.
+- **Venue:** photo, embedded map and directions.
+- **RSVP:** replies are saved to a Google Sheet.
+- **Save the date:** sign-off with call buttons.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Make it yours
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| What | Where |
+|---|---|
+| Names, parents, date and time, venue, phones, RSVP deadline | `content/invitation.ts` |
+| Button and heading text (both languages) | `content/ui.ts` |
+| Couple, gallery and venue photos | Replace the files in `public/images/`, keeping the same names. Any aspect ratio works. |
+| Intro drums and background music | Add `public/audio/intro.mp3` and `public/audio/music.mp3`. The music button only appears once a track is playing. Set a path to `null` in `content/invitation.ts` to turn it off. |
+| Colours, fonts, ornaments | `app/globals.css` (tokens at the top), `app/layout.tsx`, `components/ornaments/` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use music you are licensed to share, for example a royalty-free track.
 
-## Learn More
+## Sharing links
 
-To learn more about Next.js, take a look at the following resources:
+- `https://your-site/?to=Mr%20%26%20Mrs%20Silva` greets the guest by name on the cover and in the letter. Without `to`, the page greets a generic guest.
+- Add `&lang=en` to open a link in English. Each guest's choice is remembered on their device.
+- Link previews (WhatsApp, Facebook) use `app/opengraph-image.tsx`. Set `SITE_URL` so the preview image has an absolute URL.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## RSVP → Google Sheet
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Follow [docs/rsvp-google-sheet.md](docs/rsvp-google-sheet.md), then set `RSVP_WEBHOOK_URL` and `RSVP_WEBHOOK_SECRET` (see `.env.example`).
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The page is statically prerendered (`cacheComponents` is on). Only the guest name from `?to=` is filled in on the client.
+- The page asks search engines not to index it (`robots: noindex`).
+- Fonts are Abhaya Libre, Noto Serif Sinhala, Maname, Cormorant Garamond, Great Vibes and Montserrat, all under the SIL Open Font License. The share image uses copies of three of them, kept in `assets/fonts/`.
